@@ -1,0 +1,16 @@
+{
+  "name": "surakshanetra-location-api",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "new-token": "node create-token.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "mongodb": "^6.0.0"
+  }
+}

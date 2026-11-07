@@ -1,0 +1,11 @@
+backend/.env
+backend/.venv/
+backend/evidence_uploads/
+__pycache__/
+*.pyc
+
+# Local generated server logs
+*.log
+# Firebase Admin private credentials (never commit service-account keys)
+backend/*firebase-admin*.json
+backend/*service-account*.json

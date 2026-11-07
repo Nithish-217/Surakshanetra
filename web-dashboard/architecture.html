@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashcam Evidence Verification System — Architecture</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --text: #1c1c1e;
+    --text-muted: #5c5c60;
+    --border: #e2e2e0;
+    --accent: #2f6f4f;
+    --accent-soft: #eaf3ee;
+    --code-bg: #f0f0ee;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15161a;
+      --surface: #1d1e23;
+      --text: #eaeaea;
+      --text-muted: #a3a3aa;
+      --border: #2e2f36;
+      --accent: #6fd3a0;
+      --accent-soft: #1e2b25;
+      --code-bg: #24252b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15161a;
+    --surface: #1d1e23;
+    --text: #eaeaea;
+    --text-muted: #a3a3aa;
+    --border: #2e2f36;
+    --accent: #6fd3a0;
+    --accent-soft: #1e2b25;
+    --code-bg: #24252b;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+  header {
+    margin-bottom: 32px;
+  }
+  h1 {
+    font-size: 1.7rem;
+    margin: 0 0 6px;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.98rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+    margin: 44px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 1.02rem;
+    margin: 24px 0 8px;
+    color: var(--accent);
+  }
+  p { margin: 8px 0; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 14px 0;
+  }
+  .diagram-scroll {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  pre.mermaid { margin: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 0.92rem;
+  }
+  .table-scroll { overflow-x: auto; }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: var(--accent-soft);
+    color: var(--text);
+    font-weight: 600;
+  }
+  tr:last-child td { border-bottom: none; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 0.88em;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.92rem;
+    margin: 14px 0;
+  }
+  footer {
+    margin-top: 50px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Dashcam-Based Evidence Verification System</h1>
+  <div class="subtitle">Architecture &amp; Tech Stack — for insurance-fraud and incident-verification use cases (accident / theft / robbery)</div>
+</header>
+
+<h2>1. System Overview</h2>
+<div class="card">
+  <p>Two roles: <b>User</b> (private vehicle owner with dashcam) and <b>Officer</b> (police / insurance investigator). When an incident is reported, the Officer queries by <b>location + time window</b>, discovers nearby dashcam-equipped vehicles via stored GPS trip metadata, and emails those owners a footage request. On consent, the backend auto-trims the exact time segment and uploads it as locked, hashed evidence — never accessed without the owner's explicit agreement.</p>
+</div>
+
+<h2>2. Simple Overview Diagram</h2>
+<div class="diagram-scroll">
+<pre class="mermaid">
+flowchart TD
+    A["🚗 User's Car<br/>Dashcam records locally<br/>+ sends GPS pings only"] --> B["📍 Location & GPS Database<br/>(who was where, when)"]
+
+    C["👮 Officer<br/>enters location + time"] --> D["🔎 Match Search<br/>find nearby cars"]
+    B --> D
+
+    D --> E["✉️📱 Request Sent<br/>Email + SMS + Push"]
+    E --> F{"User responds<br/>within 72 hours?"}
+
+    F -- "✅ Agrees" --> G["✂️ Auto-Trim Footage<br/>to exact time window"]
+    G --> H["🔒 Hash + Lock Evidence<br/>SHA-256, cannot be deleted"]
+    H --> I["📁 Evidence Ready<br/>for Officer to Review"]
+
+    F -- "⏳ No response<br/>(reminder at 48h)" --> J["⚠️ Marked Expired"]
+    J --> K["📉 Adverse Inference<br/>flag on claimant's case"]
+    J --> L["📝 Case still proven to exist<br/>via timestamp record<br/>(taken at request time)"]
+
+    style A fill:#eaf3ee,stroke:#2f6f4f,color:#14251c
+    style I fill:#eaf3ee,stroke:#2f6f4f,color:#14251c
+    style J fill:#fbeee0,stroke:#c9781f,color:#3a2408
+    style K fill:#fbeee0,stroke:#c9781f,color:#3a2408
+    style L fill:#fbeee0,stroke:#c9781f,color:#3a2408
+</pre>
+</div>
+
+<div class="note">
+Read it as one path forward: the car always records + shares only its <b>location</b>, never the video, until an officer's request is agreed to. If the owner agrees, the clip is trimmed, hashed, and locked. If they don't respond, nothing is lost entirely — a timestamped proof-of-existence record remains, and the claim tied to that gap gets flagged.
+</div>
+
+<h2>3. Detailed Component Architecture</h2>
+<div class="diagram-scroll">
+<pre class="mermaid">
+flowchart TB
+    subgraph UserSide["User Side"]
+        UA["User Mobile App<br/>(Dashcam + GPS logger)"]
+        LocalStore["Local/Private Storage<br/>(raw dashcam footage)"]
+        UA -->|records & stores locally| LocalStore
+        UA -->|periodic GPS + timestamp ping only, NOT video| API
+    end
+
+    subgraph Backend["Backend Services"]
+        API["Backend API<br/>(Node.js / FastAPI)"]
+        Auth["Auth Service<br/>(JWT, Role-based)"]
+        GeoDB["PostgreSQL + PostGIS<br/>(trip metadata: device, lat, lon, time)"]
+        Notify["Notification Service<br/>(Email + SMS + Push)"]
+        Reminder["Reminder Job<br/>(48h nudge, 72h expiry)"]
+        Trimmer["FFmpeg Trim Worker"]
+        Ledger["Evidence Ledger DB<br/>(append-only, hash-chained)"]
+        Lock["Immutability Trigger Layer<br/>(DB-level DELETE/UPDATE block)"]
+        Storage["Evidence Object Storage<br/>(MinIO / self-hosted, locked_until)"]
+        Claims["Claim Evaluation Flag<br/>(adverse inference on expiry)"]
+        API --> Auth
+        API --> GeoDB
+        API --> Notify
+        Notify --> Reminder
+        API --> Trimmer
+        API --> Ledger
+        Ledger --> Lock
+        Trimmer --> Storage
+        Storage --> Lock
+        Reminder -->|expired, no response| Claims
+    end
+
+    subgraph OfficerSide["Officer Side"]
+        OD["Officer Dashboard<br/>(React)"]
+        OD -->|1. submit location + time window| API
+    end
+
+    API -->|2. query devices near location/time| GeoDB
+    GeoDB -->|3. matching device list| API
+    API -->|4. send request| Notify
+    Notify -->|5. request via email/SMS/push| UA
+    UA -->|6a. user taps Agree| API
+    UA -.->|6b. no response by 72h| Reminder
+    API -->|7. record request event, hash if available| Ledger
+    LocalStore -->|8. only on consent: upload full clip| Trimmer
+    Trimmer -->|9. trimmed clip + SHA-256 hash| Storage
+    Storage -->|10. locked evidence available| OD
+    Claims -->|11. flags uncorroborated claim| OD
+</pre>
+</div>
+
+<div class="note">
+Video never leaves the user's device until they tap <b>Agree</b>. Only GPS/time metadata is continuously synced — this is what makes the "find nearby cars" query possible without ever touching private footage without consent.
+</div>
+
+<h2>4. Consent → Trim → Lock Flow (Sequence)</h2>
+<div class="diagram-scroll">
+<pre class="mermaid">
+sequenceDiagram
+    participant O as Officer Dashboard
+    participant B as Backend API
+    participant G as GeoDB (PostGIS)
+    participant U as User App
+    participant F as FFmpeg Trim Worker
+    participant L as Evidence Ledger (hash-chained)
+    participant S as Locked Storage
+
+    O->>B: Request footage (lat, lon, radius, t_from, t_to)
+    B->>G: Query devices in area & time range
+    G-->>B: List of matching device IDs
+    B->>L: Log request event (append-only)
+    B->>U: Send email "Officer requests footage [t_from-t_to]"
+    U-->>B: Taps "Agree"
+    B->>U: Pull raw clip for that window only
+    U-->>F: Upload raw segment
+    F->>F: Trim to exact [t_from, t_to]
+    F->>F: Compute SHA-256 hash
+    F->>L: Append {hash, timestamp, request_id} (chained to prior hash)
+    F->>S: Store trimmed clip, set locked_until = now + 30 days
+    S-->>O: Evidence available for review
+</pre>
+</div>
+
+<h2>5. Data Model (Core Tables)</h2>
+<div class="table-scroll">
+<table>
+<tr><th>Table</th><th>Purpose</th><th>Key Fields</th></tr>
+<tr><td><code>users</code></td><td>Vehicle owners</td><td>id, name, email, vehicle_id</td></tr>
+<tr><td><code>officers</code></td><td>Police / insurer investigators</td><td>id, name, badge_id, org</td></tr>
+<tr><td><code>trip_pings</code></td><td>GPS metadata only, no video</td><td>device_id, lat, lon, timestamp</td></tr>
+<tr><td><code>footage_requests</code></td><td>One row per officer request</td><td>id, officer_id, lat, lon, radius, t_from, t_to, status</td></tr>
+<tr><td><code>footage_files</code></td><td>Metadata of uploaded/trimmed clips</td><td>id, request_id, storage_path, sha256, locked_until</td></tr>
+<tr><td><code>evidence_ledger</code></td><td>Append-only, hash-chained audit log</td><td>id, event_type, footage_id, hash, prev_hash, timestamp</td></tr>
+</table>
+</div>
+
+<h2>6. Technology Stack</h2>
+
+<h3>Frontend — User App</h3>
+<div class="table-scroll">
+<table>
+<tr><th>Component</th><th>Technology</th><th>Notes</th></tr>
+<tr><td>Mobile app</td><td>React Native / Flutter</td><td>free, cross-platform, camera + GPS APIs</td></tr>
+<tr><td>Local video storage</td><td>Device filesystem (app sandbox)</td><td>raw footage stays here until consent</td></tr>
+</table>
+</div>
+
+<h3>Frontend — Officer Dashboard</h3>
+<div class="table-scroll">
+<table>
+<tr><th>Component</th><th>Technology</th><th>Notes</th></tr>
+<tr><td>Web dashboard</td><td>React + Leaflet/Mapbox (free tier)</td><td>location-based search UI, map view of matches</td></tr>
+</table>
+</div>
+
+<h3>Backend</h3>
+<div class="table-scroll">
+<table>
+<tr><th>Component</th><th>Technology</th><th>Notes</th></tr>
+<tr><td>API server</td><td>Node.js + Express, or Python + FastAPI</td><td>role-based routes for User / Officer</td></tr>
+<tr><td>Auth</td><td>JWT + bcrypt</td><td>simple, free, no vendor lock-in</td></tr>
+<tr><td>Geo query engine</td><td>PostgreSQL + PostGIS extension</td><td>radius + time-window queries on trip_pings</td></tr>
+<tr><td>Video trimming</td><td>FFmpeg</td><td>server-side, trims to exact requested segment</td></tr>
+<tr><td>Hashing</td><td>Node <code>crypto</code> / Python <code>hashlib</code> (SHA-256)</td><td>fingerprint on first contact + on upload</td></tr>
+<tr><td>Object storage</td><td>MinIO (self-hosted, S3-compatible)</td><td>free, stores trimmed evidence clips</td></tr>
+<tr><td>Immutability enforcement</td><td>PostgreSQL <code>BEFORE DELETE/UPDATE</code> triggers + revoked DB privileges</td><td>DB-level lock, not just app-level</td></tr>
+<tr><td>Email notifications</td><td>Nodemailer (Gmail SMTP) or SendGrid free tier</td><td>request emails with Agree/Deny action link</td></tr>
+</table>
+</div>
+
+<h3>For the Prototype / Demo Stage</h3>
+<div class="table-scroll">
+<table>
+<tr><th>Limitation</th><th>Workaround</th></tr>
+<tr><td>No access to real dashcams</td><td>Record your own sample clips; seed Postgres with fake (device_id, lat, lon, t_from, t_to) rows pointing to them</td></tr>
+<tr><td>No fleet-wide GPS access</td><td>Simulate trip_pings with a script generating plausible routes/timestamps</td></tr>
+<tr><td>No paid cloud storage</td><td>MinIO running locally / on a free-tier VM (Render, Railway free tier, or your own machine for the demo)</td></tr>
+</table>
+</div>
+
+<h2>6. Evidence Integrity Design</h2>
+<div class="card">
+<p><b>Hash-and-timestamp on first contact:</b> the moment a request is generated, the system logs a fact record — device, location, time window, request time — before any video is uploaded. If a clip is later submitted, its SHA-256 hash is compared; a mismatch or a missing submission after a logged request is itself evidence.</p>
+<p><b>Append-only, hash-chained ledger:</b> each ledger entry's hash is computed from its own data plus the previous entry's hash (<code>hash_N = SHA256(data_N + hash_(N-1))</code>), so tampering with any past record breaks every hash after it — detectable without needing real blockchain infrastructure.</p>
+<p><b>DB-enforced lock:</b> uploaded evidence is locked via a <code>locked_until</code> timestamp and a Postgres trigger that rejects DELETE/UPDATE until that time passes; the application's DB role is also stripped of DELETE privileges as a second line of defense.</p>
+</div>
+
+<div class="note">
+Scope note: this design never accesses or copies footage without the owner's explicit consent, and the lock/ledger only applies to footage the user has already agreed to share — keeping the whole system on the right side of privacy and evidence-handling norms.
+</div>
+
+<footer>Architecture reference document — dashcam evidence verification project</footer>
+
+</div>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
+</html>

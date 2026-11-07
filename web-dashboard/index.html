@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SurakshaNethra | Evidence Requests</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <style>
+    .live-status.connected { color: #176b55; }
+    .connection-dialog { width: min(520px, calc(100vw - 32px)); border: 1px solid #dce6e0; border-radius: 10px; padding: 24px; color: #172720; box-shadow: 0 18px 70px #10251c55; }
+    .connection-dialog::backdrop { background: #10251c88; }
+    .connection-dialog form { display: grid; gap: 16px; }
+    .connection-dialog label { display: grid; gap: 7px; color: #52615a; font-size: 12px; font-weight: 700; }
+    .connection-dialog input { width: 100%; padding: 12px; border: 1px solid #cbd6d0; border-radius: 5px; color: #172720; font: inherit; }
+    .connection-help,#connectionMessage { margin: 0; color: #687770; font-size: 11px; line-height: 1.5; }
+    .connection-actions { display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
+    .evidence-ready { border: 0; background: transparent; cursor: pointer; }
+    .match-row { cursor: pointer; }
+    .request-panel label small { display: block; margin-top: 5px; color: #687770; font-size: 10px; }
+    html[data-theme="dark"] body { background: #080d0c; color: #e5eee9; }
+    html[data-theme="dark"] .topbar { border-color: #29453b; }
+    html[data-theme="dark"] .request-panel,
+    html[data-theme="dark"] .results-layout,
+    html[data-theme="dark"] .table-wrap { background: #0d1714; border-color: #29453b; }
+    html[data-theme="dark"] .field { background: #101f1a; border-color: #355448; }
+    html[data-theme="dark"] .field input,
+    html[data-theme="dark"] .field select { color: #e5eee9; }
+    html[data-theme="dark"] th { background: #14251f; color: #b7c9c0; }
+    html[data-theme="dark"] td,
+    html[data-theme="dark"] .match-row,
+    html[data-theme="dark"] .form-footer,
+    html[data-theme="dark"] .drawer-header,
+    html[data-theme="dark"] .notification { border-color: #29453b; }
+    html[data-theme="dark"] .icon-button { background: #102019; border-color: #355448; color: #e5eee9; }
+    html[data-theme="dark"] .notification-drawer,
+    html[data-theme="dark"] .connection-dialog { background: #0d1714; color: #e5eee9; border-color: #29453b; }
+    html[data-theme="dark"] .connection-dialog input { background: #101f1a; color: #e5eee9; border-color: #355448; }
+    html[data-theme="dark"] .map-panel { background: #10221b; }
+  </style>
+  <script>
+    document.documentElement.dataset.theme = localStorage.getItem('sn-theme') || 'light';
+  </script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#top" aria-label="SurakshaNethra home">
+      <span class="brand-mark"><i data-lucide="scan-eye"></i></span>
+      <span>Suraksha<span>Nethra</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a class="nav-link active" href="#requests"><i data-lucide="send"></i> Requests</a>
+      <a class="nav-link" href="evidence-library.html"><i data-lucide="film"></i> Evidence library</a>
+      <a class="nav-link" href="#notifications" id="notificationsLink"><i data-lucide="bell"></i> Notifications <b id="notificationCount">0</b></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="secure-note"><i data-lucide="shield-check"></i><span>Authorized viewer<br><small>Secure session active</small></span></div>
+      <button class="icon-button" type="button" id="themeToggle" title="Switch theme" aria-label="Switch theme"><i data-lucide="moon"></i></button>
+      <button class="icon-button" type="button" id="connectionSettings" title="Backend connection" aria-label="Backend connection"><i data-lucide="settings-2"></i></button>
+    </div>
+  </aside>
+
+  <main id="top">
+    <header class="topbar">
+      <div class="mobile-brand">Suraksha<span>Nethra</span></div>
+      <div class="top-actions">
+        <button class="theme-button" type="button" id="themeToggleDashboard" title="Switch theme" aria-label="Switch theme"><i data-lucide="moon"></i><span>Theme</span></button>
+        <button class="icon-button notification-button" type="button" id="notificationButton" title="Open notifications" aria-label="Open notifications"><i data-lucide="bell"></i><span id="topNotificationCount"></span></button>
+        <div class="viewer"><span>AV</span><div><strong>Authorized Viewer</strong><small>Investigation team</small></div></div>
+      </div>
+    </header>
+
+    <section class="page-heading" id="requests">
+      <div>
+        <p class="eyebrow">Evidence coordination</p>
+        <h1>Request nearby footage</h1>
+        <p class="intro">Search telemetry already shared by registered vehicles, then request consent for the exact incident window.</p>
+      </div>
+      <div class="live-status" id="apiStatus"><span></span> Backend not configured</div>
+    </section>
+
+    <section class="request-panel" aria-labelledby="request-form-title">
+      <div class="panel-title"><div><p class="eyebrow">New request</p><h2 id="request-form-title">Incident details</h2></div><span class="step">01 / 02</span></div>
+      <form id="searchForm">
+        <div class="form-grid">
+          <label>Incident coordinates
+            <span class="field"><i data-lucide="map-pin"></i><input id="location" name="location" type="text" placeholder="12.9716, 77.5946" required></span>
+            <small>Enter latitude, longitude. Vehicle matching uses the GPS coordinates sent by the phones.</small>
+          </label>
+          <label>Search radius
+            <span class="field"><i data-lucide="radius"></i><select id="radius" name="radius"><option value="0.5">500 metres</option><option value="1" selected>1 kilometre</option><option value="2">2 kilometres</option><option value="5">5 kilometres</option></select></span>
+          </label>
+          <label>From
+            <span class="field"><i data-lucide="calendar-clock"></i><input id="fromTime" name="fromTime" type="datetime-local" required></span>
+          </label>
+          <label>To
+            <span class="field"><i data-lucide="calendar-clock"></i><input id="toTime" name="toTime" type="datetime-local" required></span>
+          </label>
+        </div>
+        <div class="form-footer"><p><i data-lucide="lock-keyhole"></i> Only location and time metadata are used for matching.</p><button class="primary-button" type="submit">Find matching vehicles <i data-lucide="arrow-right"></i></button></div>
+      </form>
+    </section>
+
+    <section class="results-section" aria-live="polite">
+      <div class="section-heading"><div><p class="eyebrow">Match review</p><h2><span id="matchCount">4</span> vehicles near the incident</h2></div><div class="legend"><span><i class="dot nearby"></i> Matching vehicle</span><span><i class="dot incident"></i> Incident</span></div></div>
+      <div class="results-layout">
+        <div class="map-panel" aria-label="Map showing incident and nearby matching vehicles">
+          <div class="map-grid"></div><div class="road road-one"></div><div class="road road-two"></div><div class="road road-three"></div>
+          <button class="map-point incident-point" title="Incident location" aria-label="Incident location"><i data-lucide="alert-triangle"></i></button>
+          <div id="mapMarkers"></div>
+          <div class="map-caption"><i data-lucide="map-pinned"></i><span id="mapLocation">Indiranagar, Bengaluru</span></div>
+        </div>
+        <div class="matches-panel">
+          <div id="matchList" class="match-list"></div>
+          <div class="match-actions"><span id="selectionText">0 selected</span><button class="primary-button" id="sendRequests" type="button" disabled>Send requests <i data-lucide="send"></i></button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="request-list-section" id="evidence">
+      <div class="section-heading"><div><p class="eyebrow">Request tracker</p><h2>Recent evidence requests</h2></div><button class="text-button" id="viewAll" type="button">View all <i data-lucide="arrow-up-right"></i></button></div>
+      <div class="table-wrap"><table><thead><tr><th>Vehicle</th><th>Requested window</th><th>Sent</th><th>Approval</th><th>Hash before approval</th><th>Evidence</th><th></th></tr></thead><tbody id="requestTable"></tbody></table></div>
+    </section>
+  </main>
+
+  <aside class="notification-drawer" id="notificationDrawer" aria-label="Notifications" aria-hidden="true">
+    <div class="drawer-header"><div><p class="eyebrow">App delivery</p><h2>Notifications</h2></div><button class="icon-button" id="closeNotifications" title="Close notifications" aria-label="Close notifications"><i data-lucide="x"></i></button></div>
+    <div id="notificationList" class="notification-list"></div>
+  </aside>
+  <dialog class="connection-dialog" id="connectionDialog">
+    <form method="dialog" id="connectionForm">
+      <div class="drawer-header"><div><p class="eyebrow">API access</p><h2>Backend connection</h2></div><button class="icon-button" value="cancel" title="Close" aria-label="Close"><i data-lucide="x"></i></button></div>
+      <label>Backend base URL<input id="apiBaseUrl" type="url" placeholder="https://your-tunnel.trycloudflare.com or http://127.0.0.1:8001" required></label>
+      <label>Demo API key<input id="apiKey" type="password" autocomplete="off" required></label>
+      <p class="connection-help">Use the HTTPS backend URL for public access. For a local demo, phones and this dashboard need to reach the backend host on the same trusted network.</p>
+      <p id="connectionMessage" role="status"></p>
+      <div class="connection-actions"><button class="text-button" type="button" id="cancelConnection">Cancel</button><button class="primary-button" type="button" id="saveConnection">Save and connect</button></div>
+    </form>
+  </dialog>
+  <dialog class="evidence-dialog" id="evidenceDialog" aria-labelledby="evidenceTitle">
+    <div class="evidence-dialog-header">
+      <div><p class="eyebrow">Approved footage</p><h2 id="evidenceTitle">Evidence clip</h2></div>
+      <button class="icon-button" type="button" id="closeEvidence" title="Close video" aria-label="Close video"><i data-lucide="x"></i></button>
+    </div>
+    <p id="evidenceMessage" class="evidence-message" role="status">Loading approved clip…</p>
+    <video id="evidencePlayer" controls playsinline preload="metadata" aria-label="Approved evidence video"></video>
+    <div class="hash-check" id="hashCheck" role="status" hidden></div>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js?v=2"></script>
+</body>
+</html>

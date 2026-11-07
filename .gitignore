@@ -1,0 +1,15 @@
+**/.env
+!**/.env.example
+**/local.properties
+**/google-services.json
+**/*firebase-admin*.json
+**/*service-account*.json
+**/build/
+**/.gradle/
+**/.kotlin/
+**/node_modules/
+**/.venv/
+**/__pycache__/
+**/evidence_uploads/
+*.apk
+*.log
