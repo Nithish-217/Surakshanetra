@@ -61,3 +61,62 @@ html[data-theme="dark"] .road { background:#173027; border-color:#2b4b3e; }
 .hash-check.bad strong { color:var(--red); }
 .hash-check.warn { background:var(--yellow-soft); border-color:var(--yellow); }
 .hash-check.warn strong { color:var(--yellow); }
+
+/* ---- v3: live map, request ages, phone status, row menu ---- */
+.map-panel.has-leaflet { background:var(--panel); }
+.map-panel.has-leaflet .map-fallback { display:none; }
+.leaflet-map { position:absolute; inset:0; z-index:1; }
+.leaflet-map[hidden] { display:none; }
+.map-panel .map-caption { z-index:500; }
+.lf-pin-wrap { background:transparent; border:0; }
+.lf-pin { width:31px; height:31px; display:grid; place-items:center; border:3px solid #fff; border-radius:50%; color:#fff; box-shadow:0 2px 6px #31504477; cursor:pointer; transition:transform .12s ease; }
+.lf-pin svg { width:15px; height:15px; }
+.lf-pin.incident { background:var(--red); cursor:default; }
+.lf-pin.vehicle { background:var(--blue); }
+.lf-pin.vehicle:hover { transform:scale(1.12); }
+.lf-pin.vehicle.selected { background:var(--green); box-shadow:0 0 0 5px #bcddcc99; }
+.dot.selected-dot { background:var(--green); }
+.dot.phone-dot { background:#7d8a85; border:2px solid #fff; box-shadow:0 0 0 1px #7d8a85; width:9px; height:9px; }
+.leaflet-container { font:inherit; }
+.leaflet-tooltip { font:600 11px Manrope,sans-serif; }
+
+.status.declined { background:#efe9e9; color:#7b4b4b; }
+.status.declined:before { border-radius:0; height:2px; width:7px; }
+td .subline { max-width:230px; }
+.age-legend { display:flex; flex-wrap:wrap; gap:8px; margin:-4px 0 12px; }
+
+.phone-summary { color:var(--muted); font-size:12px; font-weight:700; }
+.phone-status { display:inline-flex; align-items:center; gap:6px; border-radius:12px; padding:4px 9px; font-size:10px; font-weight:800; white-space:nowrap; }
+.phone-status:before { content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+.phone-status.online { background:var(--green-soft); color:var(--green); }
+.phone-status.online:before { box-shadow:0 0 0 3px #35a36e40; animation:sn-pulse 1.8s ease-in-out infinite; }
+.phone-status.idle { background:var(--yellow-soft); color:var(--yellow); }
+.phone-status.offline { background:#ecefed; color:#65706c; }
+@keyframes sn-pulse { 50% { box-shadow:0 0 0 6px #35a36e00; } }
+@media (prefers-reduced-motion: reduce) { .phone-status.online:before { animation:none; } }
+.locate-button { padding:0; font:500 11px DM Mono,monospace; }
+.locate-button svg { width:13px; }
+.table-note { margin:9px 2px 0; color:var(--muted); font-size:11px; }
+
+.row-menu { cursor:pointer; border-radius:5px; padding:4px; }
+.row-menu:hover, .row-menu[aria-expanded="true"] { background:var(--green-soft); color:var(--green); }
+.row-menu-popover { position:fixed; z-index:30; min-width:230px; padding:6px; background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 12px 34px #14292333; }
+.row-menu-popover[hidden] { display:none; }
+.row-menu-title { margin:2px 8px 6px; font:600 12px DM Mono,monospace; color:var(--ink); }
+.row-menu-title small { display:block; color:var(--muted); font:10px DM Mono,monospace; overflow-wrap:anywhere; margin-top:2px; }
+.row-menu-popover button { display:flex; align-items:center; gap:9px; width:100%; padding:8px; border:0; border-radius:5px; background:transparent; color:var(--ink); font:600 12px Manrope,sans-serif; text-align:left; cursor:pointer; }
+.row-menu-popover button svg { width:15px; color:var(--green); }
+.row-menu-popover button:hover:not([disabled]), .row-menu-popover button:focus-visible { background:var(--green-soft); outline:none; }
+.row-menu-popover button[disabled] { opacity:.45; cursor:not-allowed; }
+
+html[data-theme="dark"] .leaflet-tile-pane { filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); }
+html[data-theme="dark"] .leaflet-control-zoom a,
+html[data-theme="dark"] .leaflet-control-attribution { background:#0d1714; color:var(--ink); border-color:var(--line); }
+html[data-theme="dark"] .leaflet-control-attribution a { color:var(--green); }
+html[data-theme="dark"] .map-caption { background:#0d1714ee; border-color:var(--line); color:var(--ink); }
+html[data-theme="dark"] .status.declined { background:#2e2222; color:#d7a6a6; }
+html[data-theme="dark"] .phone-status.offline,
+html[data-theme="dark"] .status.expired { background:#1c2723; color:#9fb6ac; }
+html[data-theme="dark"] .row-menu-popover { box-shadow:0 12px 34px #000a; }
+.match-row .vehicle-name, .match-row .vehicle-meta { display:block; }
+html[data-theme="dark"] .match-row .vehicle-name { color:var(--ink); }

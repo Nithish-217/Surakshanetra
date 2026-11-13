@@ -383,6 +383,8 @@ async def create_footage_requests(payload: FootageRequestCreate):
 async def pending_footage_requests(vehicle_reg_number: str = Query(min_length=3, max_length=32)):
     """Polling fallback for demo phones; Firebase can be enabled separately later."""
     vehicle = vehicle_reg_number.replace(" ", "").upper()
+    # A poll proves the app is online even while it has no new GPS fix to send.
+    await database().devices.update_one({"vehicle_reg_number": vehicle}, {"$set": {"last_poll_at": utc_now()}})
     documents = await database().footage_requests.find(
         {"vehicle_reg_number": vehicle, "status": "approval_pending", "deadline_at": {"$gt": utc_now()}}
     ).sort("created_at", ASCENDING).to_list(length=50)
@@ -476,6 +478,55 @@ async def list_footage_requests():
     )
     requests = await db.footage_requests.find().sort("created_at", DESCENDING).to_list(length=200)
     return {"requests": [public_request(request) for request in requests]}
+
+
+@api_router.get("/api/v1/devices", dependencies=[Depends(require_demo_api_key)])
+async def list_devices():
+    """Phone status for the dashboard: latest GPS fix and when the app last reached the API."""
+    db = database()
+    devices = await db.devices.find({}, {"_id": 0, "fcm_token": 0}).to_list(length=500)
+    cursor = await db.gps_pings.aggregate(
+        [
+            {"$sort": {"timestamp": DESCENDING}},
+            {
+                "$group": {
+                    "_id": "$vehicle_reg_number",
+                    "last_ping_at": {"$first": "$timestamp"},
+                    "location": {"$first": "$location"},
+                    "accuracy_meters": {"$first": "$accuracy_meters"},
+                    "last_received_at": {"$max": "$received_at"},
+                    "ping_count": {"$sum": 1},
+                }
+            },
+        ],
+        allowDiskUse=True,
+    )
+    latest = {row["_id"]: row for row in await cursor.to_list(length=None)}
+
+    def newest(*values):
+        present = [value for value in values if isinstance(value, datetime)]
+        return max(present) if present else None
+
+    result = []
+    for device in devices:
+        vehicle = device.get("vehicle_reg_number")
+        ping = latest.get(vehicle, {})
+        coordinates = (ping.get("location") or {}).get("coordinates") or [None, None]
+        result.append(
+            {
+                "vehicle_reg_number": vehicle,
+                "owner_name": device.get("owner_name") or "Vehicle owner",
+                "last_ping_at": api_time(ping.get("last_ping_at")),
+                "last_poll_at": api_time(device.get("last_poll_at")),
+                "last_contact_at": api_time(newest(ping.get("last_received_at"), device.get("last_poll_at"))),
+                "latitude": coordinates[1],
+                "longitude": coordinates[0],
+                "accuracy_meters": ping.get("accuracy_meters"),
+                "ping_count": ping.get("ping_count", 0),
+            }
+        )
+    result.sort(key=lambda item: item["last_contact_at"] or item["last_ping_at"] or "", reverse=True)
+    return {"devices": result, "server_time": api_time(utc_now())}
 
 
 @api_router.get("/api/v1/evidence/{evidence_id}", dependencies=[Depends(require_demo_api_key)])

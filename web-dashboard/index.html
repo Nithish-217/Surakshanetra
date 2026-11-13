@@ -7,8 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" integrity="sha384-ieG+IKD0d/ZPXyCBTMVAbqsQdns8QGJR/e26WMw7M4fkaI/rHcS/YIoi+ah9WGge" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="styles.css?v=3">
   <style>
     .live-status.connected { color: #176b55; }
     .connection-dialog { width: min(520px, calc(100vw - 32px)); border: 1px solid #dce6e0; border-radius: 10px; padding: 24px; color: #172720; box-shadow: 0 18px 70px #10251c55; }
@@ -105,12 +107,15 @@
     </section>
 
     <section class="results-section" aria-live="polite">
-      <div class="section-heading"><div><p class="eyebrow">Match review</p><h2><span id="matchCount">4</span> vehicles near the incident</h2></div><div class="legend"><span><i class="dot nearby"></i> Matching vehicle</span><span><i class="dot incident"></i> Incident</span></div></div>
+      <div class="section-heading"><div><p class="eyebrow">Match review</p><h2><span id="matchCount">4</span> vehicles near the incident</h2></div><div class="legend"><span><i class="dot nearby"></i> Matching vehicle</span><span><i class="dot selected-dot"></i> Selected</span><span><i class="dot incident"></i> Incident</span><span><i class="dot phone-dot"></i> Phone last GPS</span></div></div>
       <div class="results-layout">
-        <div class="map-panel" aria-label="Map showing incident and nearby matching vehicles">
-          <div class="map-grid"></div><div class="road road-one"></div><div class="road road-two"></div><div class="road road-three"></div>
-          <button class="map-point incident-point" title="Incident location" aria-label="Incident location"><i data-lucide="alert-triangle"></i></button>
-          <div id="mapMarkers"></div>
+        <div class="map-panel" id="mapPanel" aria-label="Map showing incident and nearby matching vehicles">
+          <div class="map-fallback">
+            <div class="map-grid"></div><div class="road road-one"></div><div class="road road-two"></div><div class="road road-three"></div>
+            <button class="map-point incident-point" title="Incident location" aria-label="Incident location"><i data-lucide="alert-triangle"></i></button>
+            <div id="mapMarkers"></div>
+          </div>
+          <div id="leafletMap" class="leaflet-map" hidden></div>
           <div class="map-caption"><i data-lucide="map-pinned"></i><span id="mapLocation">Indiranagar, Bengaluru</span></div>
         </div>
         <div class="matches-panel">
@@ -120,8 +125,15 @@
       </div>
     </section>
 
+    <section class="request-list-section" id="phones">
+      <div class="section-heading"><div><p class="eyebrow">Phone status</p><h2>Registered phones</h2></div><span class="phone-summary" id="phoneSummary">Connect the backend to see phones</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Vehicle</th><th>Status</th><th>Last GPS fix</th><th>Last request check</th><th>Last location</th><th>GPS points</th></tr></thead><tbody id="phoneTable"><tr><td colspan="6" class="vehicle-meta">No phone data loaded yet.</td></tr></tbody></table></div>
+      <p class="table-note">Online: the app reached the backend in the last 2 minutes · Idle: within 30 minutes · Offline: longer. Phones send GPS about every 30 seconds while live location is on.</p>
+    </section>
+
     <section class="request-list-section" id="evidence">
       <div class="section-heading"><div><p class="eyebrow">Request tracker</p><h2>Recent evidence requests</h2></div><button class="text-button" id="viewAll" type="button">View all <i data-lucide="arrow-up-right"></i></button></div>
+      <div class="age-legend" aria-label="Request age colours"><span class="status pending">Under 1 week</span><span class="status acknowledged">1–2 weeks</span><span class="status overdue">Over 2 weeks</span><span class="status expired">Expired after 30 days</span><span class="status declined">Declined</span><span class="status approved">Approved</span></div>
       <div class="table-wrap"><table><thead><tr><th>Vehicle</th><th>Requested window</th><th>Sent</th><th>Approval</th><th>Hash before approval</th><th>Evidence</th><th></th></tr></thead><tbody id="requestTable"></tbody></table></div>
     </section>
   </main>
@@ -149,7 +161,8 @@
     <video id="evidencePlayer" controls playsinline preload="metadata" aria-label="Approved evidence video"></video>
     <div class="hash-check" id="hashCheck" role="status" hidden></div>
   </dialog>
+  <div class="row-menu-popover" id="rowMenu" role="menu" hidden></div>
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

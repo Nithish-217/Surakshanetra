@@ -50,7 +50,7 @@
 <dialog id="connectionDialog" class="modal"><form id="connectionForm"><h2 style="margin:0">Backend connection</h2><p class="subtle">Enter the API-only URL and DEMO_API_KEY from the FastAPI backend. The key stays in this browser tab.</p><label>API base URL<input id="apiBase" type="url" placeholder="https://api.example.com or http://127.0.0.1:8001" required></label><label>Demo API key<input id="apiKey" type="password" autocomplete="off" required></label><div id="connectionError" class="notice-line bad" hidden></div><div class="modal-actions"><button class="btn" type="button" id="cancelConnection">Cancel</button><button class="btn primary" type="submit">Test and connect</button></div></form></dialog>
 <script>
 (()=>{
- const BASE_KEY='sn-api-base',KEY_KEY='sn-api-key';let requests=[],selectedId=null,objectUrl=null,loadedId=null,busy=false;const $=id=>document.getElementById(id);
+ const BASE_KEY='sn-api-base',KEY_KEY='sn-api-key';let requests=[],selectedId=(()=>{try{return decodeURIComponent(location.hash.slice(1))||null}catch{return null}})(),objectUrl=null,loadedId=null,busy=false;const $=id=>document.getElementById(id);
  const defaultBase=()=>{const u=new URL(location.href);if((u.hostname==='localhost'||u.hostname==='127.0.0.1')&&u.port==='8000')u.port='8001';return u.origin;};
  const base=()=>($('apiBase').value||sessionStorage.getItem(BASE_KEY)||defaultBase()).trim().replace(/\/+$/,'');
  const key=()=>sessionStorage.getItem(KEY_KEY)||$('apiKey').value.trim();
